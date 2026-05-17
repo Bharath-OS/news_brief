@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:news_app/core/services/http_client.dart';
+import 'package:news_app/core/theme/app_theme.dart';
+import 'package:news_app/data/repository/news_repository.dart';
+import 'features/home/bloc/home_bloc.dart';
+import 'features/splash/view/splash.dart';
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: "secrets.env");
   runApp(MyApp());
 }
 
@@ -10,6 +18,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: SplashScreen());
+    return RepositoryProvider(
+      create: (context) => NewsRepository(AppClient(http.Client())),
+      child: BlocProvider(
+        create: (context) => HeadlinesBloc(context.read<NewsRepository>()),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          home: const SplashScreen(),
+        ),
+      ),
+    );
   }
 }
