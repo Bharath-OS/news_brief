@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:news_app/core/theme/app_colors.dart';
 import 'package:news_app/core/theme/app_text_styles.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:news_app/features/bookmarks/bloc/bookmark_bloc.dart';
 
 import '../../../data/model/news_model.dart';
 
@@ -19,10 +21,41 @@ class NewsDetailsScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.bookmark_border, color: Colors.white),
-            onPressed: () {
-              // TODO: Dispatch save bookmark event
+          BlocBuilder<BookmarkBloc, BookmarkState>(
+            builder: (context, state) {
+              bool isBookmarked = false;
+              if (state is BookmarkSuccess) {
+                isBookmarked = state.bookmarkedArticles.any(
+                  (a) => a.url == news.url && a.title == news.title,
+                );
+              }
+              return IconButton(
+                icon: Icon(
+                  isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  color: isBookmarked ? AppColors.primary : Colors.white,
+                ),
+                onPressed: () {
+                  if (!isBookmarked) {
+                    context.read<BookmarkBloc>().add(AddToBookmark(news));
+                  } else {
+                    Article? articleToRemove;
+                    if (state is BookmarkSuccess) {
+                      try {
+                        articleToRemove = state.bookmarkedArticles.firstWhere(
+                          (a) => a.url == news.url && a.title == news.title,
+                        );
+                      } catch (e) {
+                        articleToRemove = news;
+                      }
+                    } else {
+                      articleToRemove = news;
+                    }
+                    context.read<BookmarkBloc>().add(
+                      RemoveFromBookmark(articleToRemove),
+                    );
+                  }
+                },
+              );
             },
           ),
           IconButton(
