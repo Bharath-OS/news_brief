@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:news_app/core/services/http_client.dart';
 import 'package:news_app/core/theme/app_theme.dart';
 import 'package:news_app/data/repository/news_repository.dart';
+import 'package:news_app/features/bookmarks/bloc/bookmark_bloc.dart';
 import 'features/home/bloc/home_bloc.dart';
 import 'features/splash/view/splash.dart';
 
@@ -20,8 +21,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return RepositoryProvider(
       create: (context) => NewsRepository(AppClient(http.Client())),
-      child: BlocProvider(
-        create: (context) => HeadlinesBloc(context.read<NewsRepository>()),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (context) => BookmarkBloc()),
+          BlocProvider(
+            create: (context) => HeadlinesBloc(
+              context.read<NewsRepository>(),
+              context.read<BookmarkBloc>(),
+            ),
+          ),
+        ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
