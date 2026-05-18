@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:news_app/core/theme/app_colors.dart';
 import 'package:news_app/core/theme/app_text_styles.dart';
+import 'package:news_app/features/bookmarks/bloc/bookmark_bloc.dart';
+import 'package:news_app/features/home/bloc/home_bloc.dart';
 import 'package:news_app/features/news_details/view/news_details_screen.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/model/news_model.dart';
 
 class NewsCard extends StatelessWidget {
-  final Article news;
-  final VoidCallback? onBookmarkTap;
-  final bool isBookmarked;
+  Article news;
 
-  const NewsCard({
-    super.key,
-    required this.news,
-    this.onBookmarkTap,
-    this.isBookmarked = false,
-  });
+  NewsCard({super.key, required this.news});
 
   @override
   Widget build(BuildContext context) {
@@ -93,18 +88,56 @@ class NewsCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isBookmarked
-                          ? AppColors.primary
-                          : AppColors.outline,
-                    ),
-                    onPressed:
-                        onBookmarkTap ??
-                        () {
-                          // TODO: Implement bookmark bloc event here
+                  // Why listen to BookmarkBloc instead of HeadlinesBloc here?
+                  // 1. Separation of Concerns: HeadlinesBloc is solely responsible for fetching and loading news articles. 
+                  //    It doesn't know or care about which articles are bookmarked. BookmarkBloc keeps track of the active bookmarks list.
+                  // 2. Global Reactivity: When we listen to BookmarkBloc here, any addition/removal from *anywhere* in the app 
+                  //    (like the details screen or the bookmarks screen) will automatically trigger a rebuild of this specific NewsCard 
+                  //    to show the correct bookmarked state!
+                  BlocBuilder<BookmarkBloc, BookmarkState>(
+                    builder: (context, state) {
+                      bool isBookmarked = false;
+                      if (state is BookmarkSuccess) {
+                        // Check if the article is already in the bookmarked list by comparing url or title
+                        isBookmarked = state.bookmarkedArticles.any((a) => a.url == news.url && a.title == news.title);
+                      }
+                      
+                      return IconButton(
+                        icon: Icon(
+                          isBookmarked
+                              ? Icons.bookmark
+                              : Icons.bookmark_border,
+                          color: isBookmarked
+                              ? AppColors.primary
+                              : AppColors.outline,
+                        ),
+                        onPressed: () {
+                          if (!isBookmarked) {
+                            context.read<BookmarkBloc>().add(
+                              AddToBookmark(news),
+                            );
+                          } else {
+                            // Find the matching article in the list to remove it
+                            Article? articleToRemove;
+                            if (state is BookmarkSuccess) {
+                              try {
+                                articleToRemove = state.bookmarkedArticles.firstWhere(
+                                  (a) => a.url == news.url && a.title == news.title,
+                                );
+                              } catch (e) {
+                                articleToRemove = news;
+                              }
+                            } else {
+                              articleToRemove = news;
+                            }
+                            
+                            context.read<BookmarkBloc>().add(
+                              RemoveFromBookmark(articleToRemove),
+                            );
+                          }
                         },
+                      );
+                    },
                   ),
                 ],
               ),
