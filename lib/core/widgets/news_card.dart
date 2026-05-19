@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:news_app/core/theme/app_colors.dart';
 import 'package:news_app/core/theme/app_text_styles.dart';
 import 'package:news_app/features/bookmarks/bloc/bookmark_bloc.dart';
-import 'package:news_app/features/home/bloc/home_bloc.dart';
 import 'package:news_app/features/news_details/view/news_details_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/model/news_model.dart';
@@ -11,7 +10,14 @@ import '../../data/model/news_model.dart';
 class NewsCard extends StatelessWidget {
   final Article news;
   final VoidCallback? onPressed;
-  const NewsCard({super.key, required this.news, this.onPressed});
+  final bool isExpanded;
+
+  const NewsCard({
+    super.key,
+    required this.news,
+    this.onPressed,
+    this.isExpanded = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,18 +32,35 @@ class NewsCard extends StatelessWidget {
               ),
             );
           },
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (news.urlToImage != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+      child: isExpanded ? _buildExpandedCard() : _buildCompactCard(),
+    );
+  }
+
+  Widget _buildExpandedCard() {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: AppColors.outlineVariant.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      color: AppColors.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (news.urlToImage != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Hero(
+                  tag: news.urlToImage ?? news.title ?? '',
                   child: CachedNetworkImage(
                     imageUrl: news.urlToImage!,
+                    memCacheHeight: 180,
                     height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -52,103 +75,261 @@ class NewsCard extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (news.urlToImage != null) const SizedBox(height: 12),
+              ),
+            if (news.urlToImage != null) const SizedBox(height: 12),
+            Text(
+              news.title ?? '',
+              style: AppTextStyles.headlineSm.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            if (news.description != null) ...[
               Text(
-                news.title ?? '',
-                style: AppTextStyles.headlineSm,
+                news.description!,
+                style: AppTextStyles.bodyMd,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
-              if (news.description != null) ...[
-                Text(
-                  news.description!,
-                  style: AppTextStyles.bodyMd,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-              ],
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+              const SizedBox(height: 12),
+            ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        news.source?.name ?? 'Unknown Source',
+                        style: AppTextStyles.labelMd.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (news.publishedAt != null)
                         Text(
-                          news.source?.name ?? 'Unknown Source',
-                          style: AppTextStyles.labelMd.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          _formatDate(news.publishedAt!),
+                          style: AppTextStyles.labelSm,
                         ),
-                        if (news.publishedAt != null)
-                          Text(
-                            _formatDate(news.publishedAt!),
-                            style: AppTextStyles.labelSm,
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
-                  // Why listen to BookmarkBloc instead of HeadlinesBloc here?
-                  // 1. Separation of Concerns: HeadlinesBloc is solely responsible for fetching and loading news articles.
-                  //    It doesn't know or care about which articles are bookmarked. BookmarkBloc keeps track of the active bookmarks list.
-                  // 2. Global Reactivity: When we listen to BookmarkBloc here, any addition/removal from *anywhere* in the app
-                  //    (like the details screen or the bookmarks screen) will automatically trigger a rebuild of this specific NewsCard
-                  //    to show the correct bookmarked state!
-                  BlocBuilder<BookmarkBloc, BookmarkState>(
-                    builder: (context, state) {
-                      bool isBookmarked = false;
-                      if (state is BookmarkSuccess) {
-                        // Check if the article is already in the bookmarked list by comparing url or title
-                        isBookmarked = state.bookmarkedArticles.any(
-                          (a) => a.url == news.url && a.title == news.title,
-                        );
-                      }
+                ),
+                BlocBuilder<BookmarkBloc, BookmarkState>(
+                  builder: (context, state) {
+                    bool isBookmarked = false;
+                    if (state is BookmarkSuccess) {
+                      isBookmarked = state.bookmarkedArticles.any(
+                        (a) => a.url == news.url && a.title == news.title,
+                      );
+                    }
 
-                      return IconButton(
-                        icon: Icon(
-                          isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                          color: isBookmarked
-                              ? AppColors.primary
-                              : AppColors.outline,
-                        ),
-                        onPressed: () {
-                          if (!isBookmarked) {
-                            context.read<BookmarkBloc>().add(
-                              AddToBookmark(news),
-                            );
-                          } else {
-                            // Find the matching article in the list to remove it
-                            Article? articleToRemove;
-                            if (state is BookmarkSuccess) {
-                              try {
-                                articleToRemove = state.bookmarkedArticles
-                                    .firstWhere(
-                                      (a) =>
-                                          a.url == news.url &&
-                                          a.title == news.title,
-                                    );
-                              } catch (e) {
-                                articleToRemove = news;
-                              }
-                            } else {
+                    return IconButton(
+                      icon: Icon(
+                        isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                        color: isBookmarked
+                            ? AppColors.primary
+                            : AppColors.outline,
+                      ),
+                      onPressed: () {
+                        if (!isBookmarked) {
+                          context.read<BookmarkBloc>().add(
+                            AddToBookmark(news),
+                          );
+                        } else {
+                          Article? articleToRemove;
+                          if (state is BookmarkSuccess) {
+                            try {
+                              articleToRemove = state.bookmarkedArticles
+                                  .firstWhere(
+                                    (a) =>
+                                        a.url == news.url &&
+                                        a.title == news.title,
+                                  );
+                            } catch (e) {
                               articleToRemove = news;
                             }
-
-                            context.read<BookmarkBloc>().add(
-                              RemoveFromBookmark(articleToRemove),
-                            );
+                          } else {
+                            articleToRemove = news;
                           }
-                        },
-                      );
-                    },
+
+                          context.read<BookmarkBloc>().add(
+                            RemoveFromBookmark(articleToRemove),
+                          );
+                        }
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactCard() {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: AppColors.outlineVariant.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      color: AppColors.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Left side square thumbnail image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Hero(
+                tag: news.urlToImage ?? news.title ?? '',
+                child: CachedNetworkImage(
+                  imageUrl: news.urlToImage ?? '',
+                  memCacheHeight: 100,
+                  memCacheWidth: 100,
+                  height: 100,
+                  width: 100,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => Container(
+                    height: 100,
+                    width: 100,
+                    color: AppColors.surfaceContainer,
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: AppColors.outline,
+                    ),
                   ),
-                ],
+                ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 16),
+            // 2. Right side text and metadata
+            Expanded(
+              child: SizedBox(
+                height: 100,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Title of the news article
+                    Text(
+                      news.title ?? '',
+                      style: AppTextStyles.headlineSm.copyWith(
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // Bottom Row: Source, dot, Date, and Bookmark icon
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  news.source?.name ?? 'Unknown Source',
+                                  style: AppTextStyles.labelMd.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (news.publishedAt != null) ...[
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.fiber_manual_record,
+                                  size: 4,
+                                  color: AppColors.outline,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _formatDate(news.publishedAt!),
+                                  style: AppTextStyles.labelSm,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        // Bookmark Button
+                        BlocBuilder<BookmarkBloc, BookmarkState>(
+                          builder: (context, state) {
+                            bool isBookmarked = false;
+                            if (state is BookmarkSuccess) {
+                              isBookmarked = state.bookmarkedArticles.any(
+                                (a) =>
+                                    a.url == news.url &&
+                                    a.title == news.title,
+                              );
+                            }
+                            return SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                icon: Icon(
+                                  isBookmarked
+                                      ? Icons.bookmark
+                                      : Icons.bookmark_border,
+                                  size: 20,
+                                  color: isBookmarked
+                                      ? AppColors.primary
+                                      : AppColors.outline,
+                                ),
+                                onPressed: () {
+                                  if (!isBookmarked) {
+                                    context.read<BookmarkBloc>().add(
+                                      AddToBookmark(news),
+                                    );
+                                  } else {
+                                    Article? articleToRemove;
+                                    if (state is BookmarkSuccess) {
+                                      try {
+                                        articleToRemove = state
+                                            .bookmarkedArticles
+                                            .firstWhere(
+                                              (a) =>
+                                                  a.url == news.url &&
+                                                  a.title == news.title,
+                                            );
+                                      } catch (e) {
+                                        articleToRemove = news;
+                                      }
+                                    } else {
+                                      articleToRemove = news;
+                                    }
+                                    context.read<BookmarkBloc>().add(
+                                      RemoveFromBookmark(articleToRemove),
+                                    );
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
