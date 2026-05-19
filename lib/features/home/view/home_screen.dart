@@ -8,17 +8,7 @@ import '../../news_details/view/news_details_screen.dart';
 import '../bloc/home_bloc.dart';
 
 class HomeScreen extends StatelessWidget {
-  HomeScreen({super.key});
-
-  int _selectedCategoryIndex = 0;
-  final List<String> _categories = [
-    'For You',
-    'Technology',
-    'Science',
-    'Sports',
-    'Business',
-    'Health',
-  ];
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -33,54 +23,78 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: BlocBuilder<HeadlinesBloc, HeadlinesState>(
-        builder: (context, state) {
-          if (state is HeadlinesSuccess) {
-            return Column(
-              children: [
-                SizedBox(
-                  height: 48,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    itemCount: _categories.length,
-                    itemBuilder: (context, index) {
-                      return CategoryChip(
-                        label: _categories[index],
-                        isSelected: _selectedCategoryIndex == index,
-                        onTap: () {
-                          _selectedCategoryIndex = index;
-                          context.read<HeadlinesBloc>().add(
-                            FetchHeadlines(
-                              _categories[index] == 'For You'
-                                  ? ''
-                                  : _categories[index],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
+      body: Column(
+        children: [
+          FilterWidget(),
+          Expanded(
+            child: BlocBuilder<HeadlinesBloc, HeadlinesState>(
+              builder: (context, state) {
+                if (state is HeadlinesSuccess) {
+                  return ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: state.articles.length,
                     itemBuilder: (context, index) {
-                      return NewsCard(news: state.articles[index]);
+                      return NewsCard(
+                        news: state.articles[index],
+                        isExpanded: true,
+                      );
                     },
-                  ),
+                  );
+                } else if (state is HeadlinesFailure) {
+                  return Center(child: Text(state.message));
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FilterWidget extends StatefulWidget {
+  const FilterWidget({super.key});
+
+  @override
+  State<FilterWidget> createState() => _FilterWidgetState();
+}
+
+class _FilterWidgetState extends State<FilterWidget> {
+  int _selectedCategoryIndex = 0;
+  final List<String> _categories = [
+    'For You',
+    'Technology',
+    'Science',
+    'Sports',
+    'Business',
+    'Health',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: _categories.length,
+        itemBuilder: (context, index) {
+          return CategoryChip(
+            label: _categories[index],
+            isSelected: _selectedCategoryIndex == index,
+            onTap: () {
+              setState(() {
+                _selectedCategoryIndex = index;
+              });
+              context.read<HeadlinesBloc>().add(
+                FetchHeadlines(
+                  _categories[index] == 'For You' ? '' : _categories[index],
                 ),
-              ],
-            );
-          } else if (state is HeadlinesFailure) {
-            return Center(child: Text(state.message));
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
+              );
+            },
+          );
         },
       ),
     );
