@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/core/theme/app_colors.dart';
 import 'package:news_app/core/theme/app_text_styles.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app/features/bookmarks/bloc/bookmark_bloc.dart';
+
+import 'package:news_app/core/widgets/primary_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../data/model/news_model.dart';
 
@@ -73,18 +77,22 @@ class NewsDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (news.urlToImage != null)
-              CachedNetworkImage(
-                imageUrl: news.urlToImage!,
-                width: double.infinity,
-                height: 350,
-                fit: BoxFit.cover,
-                errorWidget: (context, url, error) => Container(
+              Hero(
+                tag: news.urlToImage!,
+                child: CachedNetworkImage(
+                  imageUrl: news.urlToImage!,
                   width: double.infinity,
+                  memCacheHeight: 350,
                   height: 350,
-                  color: AppColors.surfaceContainer,
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    color: AppColors.outline,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => Container(
+                    width: double.infinity,
+                    height: 350,
+                    color: AppColors.surfaceContainer,
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: AppColors.outline,
+                    ),
                   ),
                 ),
               ),
@@ -135,14 +143,22 @@ class NewsDetailsScreen extends StatelessWidget {
                     style: AppTextStyles.bodyLg,
                   ),
                   const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {},
-                        child: Text('Read More'),
-                      ),
-                    ],
+                  PrimaryButton(
+                    text: 'Read Full Article',
+                    icon: Icons.open_in_new,
+                    onPressed: () async {
+                      try {
+                        final articleUrl = Uri.parse(news.url!);
+                        if (!await launchUrl(
+                          articleUrl,
+                          mode: LaunchMode.externalApplication,
+                        )) {
+                          throw Exception('Could not launch ${news.url}');
+                        }
+                      } catch (e) {
+                        debugPrint(e.toString());
+                      }
+                    },
                   ),
                 ],
               ),
