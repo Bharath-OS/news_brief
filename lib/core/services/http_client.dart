@@ -8,12 +8,10 @@ class AppClient {
   final http.Client _client;
   AppClient(this._client);
 
-  final _headers = {
-    // "accept": "application/json",
-    "Authorization": "${dotenv.env['YOUR_API_KEY']}",
-  };
+  final _headers = {"Authorization": "${dotenv.env['YOUR_API_KEY']}"};
 
   Future<dynamic> get(String endpoint) async {
+    // final url = Uri.parse('${ApiConstants().baseUrl}$endpoint').;
     final appUrl = Uri.parse('${ApiConstants().baseUrl}$endpoint');
     try {
       final http.Response response = await _client.get(
