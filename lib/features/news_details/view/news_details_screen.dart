@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/core/theme/app_colors.dart';
 import 'package:news_app/core/theme/app_text_styles.dart';
@@ -72,12 +73,12 @@ class NewsDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (news.urlToImage != null)
-              Image.network(
-                news.urlToImage!,
+              CachedNetworkImage(
+                imageUrl: news.urlToImage!,
                 width: double.infinity,
                 height: 350,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+                errorWidget: (context, url, error) => Container(
                   width: double.infinity,
                   height: 350,
                   color: AppColors.surfaceContainer,
