@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(iconPath),
-              const SizedBox(height: 16),
+              // const SizedBox(height: 16),
               Text(
                 'NewsBrief',
                 style: AppTextStyles.headlineLg.copyWith(
