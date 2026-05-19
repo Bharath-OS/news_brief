@@ -4,6 +4,7 @@ import 'package:news_app/core/theme/app_text_styles.dart';
 import 'package:news_app/core/widgets/news_card.dart';
 import 'package:news_app/features/home/widgets/category_chip.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../news_details/view/news_details_screen.dart';
 import '../bloc/home_bloc.dart';
 
 class HomeScreen extends StatelessWidget {

@@ -1,23 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_app/core/theme/app_text_styles.dart';
-import 'package:news_app/core/utils/dummy_data.dart';
 import 'package:news_app/core/widgets/news_card.dart';
+import 'package:news_app/data/model/news_model.dart';
+import 'package:news_app/data/repository/news_repository.dart';
+import 'package:news_app/features/search/bloc/search_event.dart';
+import '../../news_details/view/news_details_screen.dart';
+import '../bloc/search_bloc.dart';
+import '../bloc/search_state.dart';
 
-class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+class SearchScreen extends StatelessWidget {
+  SearchScreen({super.key});
+
+  final List<Article> searchResults = [];
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => SearchBloc(context.read<NewsRepository>()),
+      child: SearchScreenBody(),
+    );
+  }
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class SearchScreenBody extends StatelessWidget {
+  SearchScreenBody({super.key});
+
   final TextEditingController _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Connect to SearchBloc here
-    final searchResults = DummyData.newsList.take(2).toList();
-
     return Scaffold(
       appBar: AppBar(title: const Text('Search')),
       body: Column(
@@ -31,27 +43,98 @@ class _SearchScreenState extends State<SearchScreen> {
                 hintText: 'Search for articles...',
                 prefixIcon: Icon(Icons.search),
               ),
-              onSubmitted: (value) {
-                // TODO: Dispatch search event to bloc
+              onChanged: (value) {
+                context.read<SearchBloc>().add(SearchArticle(value));
               },
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text('Recent Searches', style: AppTextStyles.headlineSm),
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: BlocBuilder<SearchBloc, SearchState>(
+              builder: (context, state) {
+                if (state is SearchLoading) {
+                  return Text('Searching...', style: AppTextStyles.headlineSm);
+                } else if (state is SearchRecent) {
+                  return Text(
+                    'Recent Searches',
+                    style: AppTextStyles.headlineSm,
+                  );
+                } else {
+                  return Text(
+                    'Search Results',
+                    style: AppTextStyles.headlineSm,
+                  );
+                }
+              },
+            ),
           ),
-          // TODO: Build actual search results using BlocBuilder
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: searchResults.length,
-              itemBuilder: (context, index) {
-                return NewsCard(news: searchResults[index]);
+            child: BlocBuilder<SearchBloc, SearchState>(
+              builder: (context, state) {
+                //newLogics
+                if (state is SearchRecent) {
+                  if (state.recents.isEmpty) {
+                    return const Center(child: Text('No recent searches yet.'));
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: state.recents.length,
+                    itemBuilder: (context, index) {
+                      return NewsCard(
+                        news: state.recents[index],
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  NewsDetailsScreen(news: state.recents[index]),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                } else if (state is SearchLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is SearchSuccess) {
+                  final searchResults = state.searchResults;
+                  if (state.searchResults.isEmpty) {
+                    return const Center(child: Text('No articles found'));
+                  } else {
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: searchResults.length,
+                      itemBuilder: (context, index) {
+                        return NewsCard(
+                          news: searchResults[index],
+                          onPressed: () {
+                            context.read<SearchBloc>().add(
+                              AddToRecent(searchResults[index]),
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => NewsDetailsScreen(
+                                  news: searchResults[index],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  }
+                } else if (state is SearchFailure) {
+                  return Center(child: Text((state).message));
+                }
+                // searchResults = context.watch<SearchBloc>().recentArticles;
+                return const Center(child: Text('Gaga Gugu'));
               },
             ),
           ),
         ],
       ),
     );
+    ;
   }
 }

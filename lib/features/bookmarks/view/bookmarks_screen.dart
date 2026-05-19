@@ -6,6 +6,7 @@ import 'package:news_app/core/utils/dummy_data.dart';
 import 'package:news_app/core/widgets/news_card.dart';
 import 'package:news_app/data/model/news_model.dart';
 
+import '../../news_details/view/news_details_screen.dart';
 import '../bloc/bookmark_bloc.dart';
 
 class BookmarksScreen extends StatelessWidget {
