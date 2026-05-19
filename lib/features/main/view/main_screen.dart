@@ -16,15 +16,14 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     HomeScreen(),
-    const SearchScreen(),
+    SearchScreen(),
     const BookmarksScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement bloc builder here to listen to navigation state if needed
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
