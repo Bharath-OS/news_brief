@@ -15,7 +15,7 @@ class HeadlinesBloc extends Bloc<HeadlinesEvent, HeadlinesState> {
   HeadlinesBloc(this.repository, this.bookmarkBloc)
     : super(HeadlinesInitial()) {
     on<FetchHeadlines>(_fetchTopHeadlines);
-    on<ToggleBookmark>(_toggleBookMark);
+    // on<ToggleBookmark>(_toggleBookMark);
   }
 
   Future<void> _fetchTopHeadlines(
@@ -41,32 +41,32 @@ class HeadlinesBloc extends Bloc<HeadlinesEvent, HeadlinesState> {
     }
   }
 
-  void _toggleBookMark(ToggleBookmark event, Emitter<HeadlinesState> emit) {
-    final index = cache[event.category]!.indexOf(event.article);
-    if (!event.article.isBookMarked) {
-      final newArticle = event.article.copyWith(isBookMarked: true);
-      cache[event.category]![index] = newArticle;
-      emit(
-        HeadlinesSuccess(
-          category: event.category,
-          articles: cache[event.category]!,
-        ),
-      );
-      bookmarkBloc.add(AddToBookmark(newArticle));
-    } else {
-      // 🔁 Bookmark OFF
-      final newArticle = event.article.copyWith(isBookMarked: false);
-      cache[event.category]![index] = newArticle;
-
-      emit(
-        HeadlinesSuccess(
-          category: event.category,
-          articles: cache[event.category]!,
-        ),
-      );
-
-      // Remove from BookmarkBloc
-      bookmarkBloc.add(RemoveFromBookmark(newArticle));
-    }
-  }
+  // void _toggleBookMark(ToggleBookmark event, Emitter<HeadlinesState> emit) {
+  //   final index = cache[event.category]!.indexOf(event.article);
+  //   if (!event.article.isBookMarked) {
+  //     final newArticle = event.article.copyWith(isBookMarked: true);
+  //     cache[event.category]![index] = newArticle;
+  //     emit(
+  //       HeadlinesSuccess(
+  //         category: event.category,
+  //         articles: cache[event.category]!,
+  //       ),
+  //     );
+  //     bookmarkBloc.add(AddToBookmark(newArticle));
+  //   } else {
+  //     // 🔁 Bookmark OFF
+  //     final newArticle = event.article.copyWith(isBookMarked: false);
+  //     cache[event.category]![index] = newArticle;
+  //
+  //     emit(
+  //       HeadlinesSuccess(
+  //         category: event.category,
+  //         articles: cache[event.category]!,
+  //       ),
+  //     );
+  //
+  //     // Remove from BookmarkBloc
+  //     bookmarkBloc.add(RemoveFromBookmark(newArticle));
+  //   }
+  // }
 }
