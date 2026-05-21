@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.idea.proto.generated.IdeaExtrasProtoKt
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -6,26 +8,26 @@ plugins {
 }
 
 android {
-    namespace = "com.example.news_app"
-    compileSdk = flutter.compileSdkVersion
+    namespace = "com.newsbrief.newsbrief_app"
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = JavaVersion.VERSION_21.toString()
     }
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.news_app"
+        applicationId = "com.newsbrief.newsbrief_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 24
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
