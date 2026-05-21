@@ -76,26 +76,26 @@ class NewsDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (news.urlToImage != null)
-              Hero(
-                tag: news.urlToImage!,
-                child: CachedNetworkImage(
-                  imageUrl: news.urlToImage!,
+            // if (news.urlToImage != null)
+            Hero(
+              tag: news.title!,
+              child: CachedNetworkImage(
+                imageUrl: news.urlToImage ?? '',
+                width: double.infinity,
+                memCacheHeight: 350,
+                height: 350,
+                fit: BoxFit.cover,
+                errorWidget: (context, url, error) => Container(
                   width: double.infinity,
-                  memCacheHeight: 350,
                   height: 350,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => Container(
-                    width: double.infinity,
-                    height: 350,
-                    color: AppColors.surfaceContainer,
-                    child: const Icon(
-                      Icons.image_not_supported,
-                      color: AppColors.outline,
-                    ),
+                  color: AppColors.surfaceContainer,
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    color: AppColors.outline,
                   ),
                 ),
               ),
+            ),
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
