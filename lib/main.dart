@@ -6,6 +6,7 @@ import 'package:news_app/core/services/http_client.dart';
 import 'package:news_app/core/theme/app_theme.dart';
 import 'package:news_app/data/repository/news_repository.dart';
 import 'package:news_app/features/bookmarks/bloc/bookmark_bloc.dart';
+import 'core/constats/routes/app_routes.dart';
 import 'features/home/bloc/home_bloc.dart';
 import 'features/splash/view/splash.dart';
 
@@ -33,6 +34,8 @@ class MyApp extends StatelessWidget {
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
+          onGenerateRoute: AppRoutes.generateRoutes,
+          initialRoute: '/',
           theme: AppTheme.lightTheme,
           home: const SplashScreen(),
         ),

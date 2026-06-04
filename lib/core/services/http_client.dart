@@ -11,7 +11,6 @@ class AppClient {
   final _headers = {"Authorization": "${dotenv.env['YOUR_API_KEY']}"};
 
   Future<dynamic> get(String endpoint) async {
-    // final url = Uri.parse('${ApiConstants().baseUrl}$endpoint').;
     final appUrl = Uri.parse('${ApiConstants().baseUrl}$endpoint');
     try {
       final http.Response response = await _client.get(
@@ -19,9 +18,13 @@ class AppClient {
         headers: _headers,
       );
       final newsData = json.decode(response.body);
-      if (newsData['status'] == 'ok') {
+      if (response.statusCode == 200) {
         return newsData;
-      } else if (newsData['status'] == 'error') {
+      } else if (response.statusCode == 400) {
+        throw Exception('Bad request');
+      } else if (response.statusCode == 404) {
+        throw Exception('	The server can not find the requested resource.');
+      } else {
         throw Exception(newsData['message']);
       }
     } catch (e) {

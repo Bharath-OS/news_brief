@@ -53,29 +53,28 @@ class NewsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (news.urlToImage != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Hero(
-                  tag: news.urlToImage ?? news.title ?? '',
-                  child: CachedNetworkImage(
-                    imageUrl: news.urlToImage!,
-                    memCacheHeight: 180,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Hero(
+                tag: news.title!,
+                child: CachedNetworkImage(
+                  imageUrl: news.urlToImage ?? '',
+                  memCacheHeight: 180,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => Container(
                     height: 180,
                     width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorWidget: (context, url, error) => Container(
-                      height: 180,
-                      width: double.infinity,
-                      color: AppColors.surfaceContainer,
-                      child: const Icon(
-                        Icons.image_not_supported,
-                        color: AppColors.outline,
-                      ),
+                    color: AppColors.surfaceContainer,
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: AppColors.outline,
                     ),
                   ),
                 ),
               ),
+            ),
             if (news.urlToImage != null) const SizedBox(height: 12),
             Text(
               news.title ?? '',
@@ -191,23 +190,20 @@ class NewsCard extends StatelessWidget {
             // 1. Left side square thumbnail image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Hero(
-                tag: news.urlToImage ?? news.title ?? '',
-                child: CachedNetworkImage(
-                  imageUrl: news.urlToImage ?? '',
-                  memCacheHeight: 100,
-                  memCacheWidth: 100,
+              child: CachedNetworkImage(
+                imageUrl: news.urlToImage ?? '',
+                memCacheHeight: 100,
+                memCacheWidth: 100,
+                height: 100,
+                width: 100,
+                fit: BoxFit.cover,
+                errorWidget: (context, url, error) => Container(
                   height: 100,
                   width: 100,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => Container(
-                    height: 100,
-                    width: 100,
-                    color: AppColors.surfaceContainer,
-                    child: const Icon(
-                      Icons.image_not_supported,
-                      color: AppColors.outline,
-                    ),
+                  color: AppColors.surfaceContainer,
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    color: AppColors.outline,
                   ),
                 ),
               ),
@@ -273,8 +269,7 @@ class NewsCard extends StatelessWidget {
                             if (state is BookmarkSuccess) {
                               isBookmarked = state.bookmarkedArticles.any(
                                 (a) =>
-                                    a.url == news.url &&
-                                    a.title == news.title,
+                                    a.url == news.url && a.title == news.title,
                               );
                             }
                             return SizedBox(

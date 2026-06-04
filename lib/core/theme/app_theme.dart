@@ -8,10 +8,13 @@ class AppTheme {
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.background,
       fontFamily: 'Inter',
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: AppColors.primary,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         elevation: 0,
-        centerTitle: false,
+        centerTitle: true,
         iconTheme: IconThemeData(color: AppColors.onBackground),
         titleTextStyle: AppTextStyles.headlineMd,
       ),
