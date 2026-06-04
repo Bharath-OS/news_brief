@@ -134,7 +134,9 @@ class NewsCard extends StatelessWidget {
                       ),
                       onPressed: () {
                         if (!isBookmarked) {
-                          context.read<BookmarkBloc>().add(AddToBookmark(news));
+                          context.read<BookmarkBloc>().add(
+                            AddToBookmark(news),
+                          );
                         } else {
                           Article? articleToRemove;
                           if (state is BookmarkSuccess) {

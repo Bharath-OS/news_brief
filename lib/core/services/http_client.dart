@@ -11,7 +11,6 @@ class AppClient {
   final _headers = {"Authorization": "${dotenv.env['YOUR_API_KEY']}"};
 
   Future<dynamic> get(String endpoint) async {
-    // final url = Uri.parse('${ApiConstants().baseUrl}$endpoint').;
     final appUrl = Uri.parse('${ApiConstants().baseUrl}$endpoint');
     try {
       final http.Response response = await _client.get(
