@@ -19,9 +19,13 @@ class AppClient {
         headers: _headers,
       );
       final newsData = json.decode(response.body);
-      if (newsData['status'] == 'ok') {
+      if (response.statusCode == 200) {
         return newsData;
-      } else if (newsData['status'] == 'error') {
+      } else if (response.statusCode == 400) {
+        throw Exception('Bad request');
+      } else if (response.statusCode == 404) {
+        throw Exception('	The server can not find the requested resource.');
+      } else {
         throw Exception(newsData['message']);
       }
     } catch (e) {
